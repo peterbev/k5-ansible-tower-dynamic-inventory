@@ -6,7 +6,7 @@ import os
 import json
 import yaml
 
-#import argparse
+import argparse
 import sys
 
 import pprint
@@ -137,10 +137,12 @@ def create_config_from_args():
         if value != None:   
             OS_AUTH[arg] = value
 
-def get_k5_server_details(token, url):
+def get_k5_server_details(token, url, name=None):
+    if name == None:
+        name='' # blank addition to the url
     session = requests.Session()
     headers = {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Auth-Token': token }
-    url = url + '/servers/detail'
+    url = url + '/servers/detail' + name
     try:
         response = session.request('GET', url, headers=headers)
     except requests.exceptions.RequestException as e:
@@ -273,17 +275,7 @@ def generate_hostvars(servers, flavors, images):
 
     #pp.pprint( default_json )
 
-
-if __name__ == "__main__":
-
-    # get OS_CLIENT_CONFIG_FILE envvar
-    # read openstack config 
-    # get auth_url, domain_name, username, password, project_name
-    # get regional auth token
-
-    # get server details
-
-    pp = pprint.PrettyPrinter(indent=2)
+def list_servers(name=None):
 
     # read in the os config file if available
     OS_CLIENT_CONFIG_FILE = os.environ.get('OS_CLIENT_CONFIG_FILE', None)
@@ -303,7 +295,7 @@ if __name__ == "__main__":
     compute_url = compute_ep['endpoints'][0]['url']
 
     # get servers for this project
-    servers = get_k5_server_details(token, compute_url)
+    servers = get_k5_server_details(token, compute_url, name)
     #pp.pprint(servers)
 
     if len(servers) >0:
@@ -312,6 +304,23 @@ if __name__ == "__main__":
         images = get_k5_image_details(token, compute_url)
         #pp.pprint(images)
 
-        generate_hostvars(servers, flavors, images)
- 
-        time.sleep(5) 
+    generate_hostvars(servers, flavors, images)
+
+
+
+if __name__ == "__main__":
+
+    pp = pprint.PrettyPrinter(indent=2)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--list', action="store_true")
+    parser.add_argument('--host', type=str)
+    args = parser.parse_args()
+
+    if args.list:
+        list_servers()
+
+    if args.host:
+        url_args = '?name=' + str(args.host)
+        list_servers(url_args)
+
