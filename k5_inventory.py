@@ -242,33 +242,61 @@ def generate_hostvars(servers, flavors, images):
         groups['all'].append(server_name)
 
         # availability_zone
-        az = server['OS-EXT-AZ:availability_zone']
+        az = 'az_' + server['OS-EXT-AZ:availability_zone']
         if az not in groups:
             groups[az] = []
         groups[az].append(server_name)
 
         # image
+        image_name = 'image_' + image_name # defined above
         if image_name not in groups:
             groups[image_name] = []
         groups[image_name].append(server_name) 
 
         # hypervisor host
-        hyp = server['OS-EXT-SRV-ATTR:hypervisor_hostname']
+        hyp = 'hypervisor_hostname_' + server['OS-EXT-SRV-ATTR:hypervisor_hostname']
         if hyp not in groups:
             groups[hyp] = []
         groups[hyp].append(server_name)
         
         # keyname
-        kn = server['key_name'] 
+        kn = 'keyname_' + server['key_name'] 
         if kn not in groups:
             groups[kn] = []
         groups[kn].append(server_name) 
 
         # vm status
-        status = server['status'] 
+        status = 'status_' + server['status'] 
         if status not in groups:
             groups[status] = []
         groups[status].append(server_name) 
+
+        # security groups
+        for sg in server['security_groups']:
+            sg_name='sg_' + sg['name']
+            if sg_name not in groups:
+                groups[sg_name] = []
+            groups[sg_name].append(server_name)
+
+        # metadata - does 'groups' exist as a list
+        if 'groups' in server['metadata'].keys():
+            grps = server['metadata']['groups']
+            if type(grps) is list:
+                for g_name in grps:
+                    if g_name not in groups:
+                        groups[g_name] = []
+                    groups[g_name].append(server_name)
+
+        for md in server['metadata']:
+            md_name='md_'+md # k only
+            val=md_name+'_'+server['metadata'][md] # k,v
+            if md_name not in groups:
+                groups[md_name] = []
+            groups[md_name].append(server_name)
+            if val not in groups:
+                groups[val] = []
+            groups[val].append(server_name)
+
 
 
     print json.dumps(default_json)
