@@ -234,7 +234,7 @@ def generate_hostvars(servers, flavors, images):
 
         # add to group
 
-        groups = default_json['groups']
+        groups = default_json
 
         # all
         if 'all' not in groups:
