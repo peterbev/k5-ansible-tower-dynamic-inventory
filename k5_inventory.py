@@ -28,7 +28,6 @@ default_json = {
         "_meta": {
             "hostvars": {}
         },
-        "groups": {}
     }
 
 
