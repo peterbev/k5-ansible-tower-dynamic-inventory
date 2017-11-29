@@ -186,8 +186,8 @@ def get_k5_flavor_details(token, url):
     resp = response.json()['flavors']
     return resp
 
-def generate_hostvars(servers, flavors, images):
-    
+def generate_hostvars(servers, flavors, images, internal_ips=False):
+   
     for server in servers:
 
         server_name = server['name']       
@@ -215,8 +215,12 @@ def generate_hostvars(servers, flavors, images):
         hostvars[server_name]['k5_image'] = image_name
 
         # get external / floating IP as ansible_ssh_host
+        #
+        # this may croak if you have dual-homed NICs etc, or at least overwrite the IP you want 
         ansible_ssh_host = ""
         addresses = server['addresses']
+        floating = ""
+        fixed = ""
         for net in addresses:
             for addr in addresses[net]:
                 if addr['OS-EXT-IPS:type'] == 'floating':
@@ -224,10 +228,14 @@ def generate_hostvars(servers, flavors, images):
                 else:
                     fixed = addr['addr']
 
-        if floating != "":
-            ansible_ssh_host = floating
+        if internal_ips:
+            ansible_ssh_host = fixed
         else:
-            ansible_ssh_host = fixed  # openstack dynamic inventory does not do this
+            # we try and use the internet public IPs
+            if floating != "":
+                ansible_ssh_host = floating
+            else:
+                ansible_ssh_host = fixed  # openstack dynamic inventory does not do this
             
         hostvars[server_name]['ansible_ssh_host'] = ansible_ssh_host
 
@@ -302,7 +310,7 @@ def generate_hostvars(servers, flavors, images):
 
     #pp.pprint( default_json )
 
-def list_servers(name=None):
+def list_servers(name=None,internal_ips=False):
 
     # read in the os config file if available
     OS_CLIENT_CONFIG_FILE = os.environ.get('OS_CLIENT_CONFIG_FILE', None)
@@ -331,7 +339,7 @@ def list_servers(name=None):
         images = get_k5_image_details(token, compute_url)
         #pp.pprint(images)
 
-    generate_hostvars(servers, flavors, images)
+    generate_hostvars(servers, flavors, images,internal_ips)
 
 
 
@@ -340,14 +348,17 @@ if __name__ == "__main__":
     pp = pprint.PrettyPrinter(indent=2)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--list', action="store_true")
+    parser.add_argument('--list', action="store_true") # make list a variable and give it a boolean True
+    parser.add_argument('--internal_ips', action="store_true") # make internal_ips a variable and give it a boolean True
     parser.add_argument('--host', type=str)
     args = parser.parse_args()
 
+    internal_ips=args.internal_ips
+
     if args.list:
-        list_servers()
+        list_servers(internal_ips=internal_ips)
 
     if args.host:
         url_args = '?name=' + str(args.host)
-        list_servers(url_args)
+        list_servers(internal_ips=internal_ips,name=url_args)
 
