@@ -18,19 +18,26 @@ OS_CLIENT_CONFIG_FILE environment variable is provided by Ansible Tower which po
 ## Test
 Test via `python k5_inventory.py --list | jq .`
 
+
+## Example
+
+```
+ansible-playbook -i k5_inventory.py ping-em.yml -e 'group_to_ping=nginx_servers'
+```
+
+`group_to_ping` is defined as this in the playbook (`ping-em.yml`)  like this `hosts: "{{ group_to_ping }}"`
+
+
 ## List internal IPs only
 
-use the `--internal_ips` flag.
-
+By setting the environment varible `K5_INTERNAL_IPS`
 eg.
 
 ```
-ansible-playbook your_playbook.yml -i './k5_inventory.py --internal_ips'
+K5_INTERNAL_IPS=avalue ansible-playbook your_playbook.yml -i k5_inventory.py
 ```
 
-note1: the use of single quotes
-
-note2: External Public facing IPs will normally appear if this flag is not used
+note: External Public facing IPs will normally appear if this flag is not used
 
 
 # Thanks

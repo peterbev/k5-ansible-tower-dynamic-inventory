@@ -349,11 +349,11 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--list', action="store_true") # make list a variable and give it a boolean True
-    parser.add_argument('--internal_ips', action="store_true") # make internal_ips a variable and give it a boolean True
     parser.add_argument('--host', type=str)
     args = parser.parse_args()
 
-    internal_ips=args.internal_ips
+    # check if ENVVAR is available to only list internal IPs
+    internal_ips = bool(os.getenv('K5_INTERNAL_IPS'))
 
     if args.list:
         list_servers(internal_ips=internal_ips)
