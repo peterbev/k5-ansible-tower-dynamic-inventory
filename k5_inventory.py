@@ -206,12 +206,15 @@ def generate_hostvars(servers, flavors, images, internal_ips=False):
         hostvars[server_name]['k5_flavor'] = flavor_name
         
         # get image name
-        image_id = server['image']['id']
-        image = next(( x for x in images if x['id'] == image_id), None)
-        if image == None:
+        try:
+            image_id = server['image']['id']
+            image = next(( x for x in images if x['id'] == image_id), None)
+            if image == None:
+                image_name = "None"
+            else:
+                image_name = image['name']
+        except:
             image_name = "None"
-        else:
-            image_name = image['name']
         hostvars[server_name]['k5_image'] = image_name
 
         # get external / floating IP as ansible_ssh_host
