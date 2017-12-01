@@ -286,25 +286,13 @@ def generate_hostvars(servers, flavors, images, internal_ips=False):
             groups[sg_name].append(server_name)
 
         # metadata - does 'groups' exist as a list
-        if 'groups' in server['metadata'].keys():
-            grps = server['metadata']['groups']
+        if 'k5groups' in server['metadata'].keys():
+            grps = server['metadata']['k5groups'].split(",")
             if type(grps) is list:
                 for g_name in grps:
                     if g_name not in groups:
                         groups[g_name] = []
                     groups[g_name].append(server_name)
-
-        for md in server['metadata']:
-            md_name='md_'+md # k only
-            val=md_name+'_'+server['metadata'][md] # k,v
-            if md_name not in groups:
-                groups[md_name] = []
-            groups[md_name].append(server_name)
-            if val not in groups:
-                groups[val] = []
-            groups[val].append(server_name)
-
-
 
     print json.dumps(default_json)
 
